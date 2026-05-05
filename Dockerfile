@@ -1,15 +1,20 @@
+# Сборка
 FROM mcr.microsoft.com/dotnet/sdk:10.0-preview AS build
 WORKDIR /src
 
-# Копируем вообще всё
+# Копируем абсолютно всё, что есть в репозитории
 COPY . .
 
-# Ищем любой файл .csproj и собираем его, куда бы ты его ни положил
-RUN dotnet publish $(find . -name "*.csproj" | head -n 1) -c Release -o /app/publish
+# Переходим в папку с проектом (Render видит её в корне)
+WORKDIR "/src/WebApplication1"
 
+# Восстанавливаем и публикуем
+RUN dotnet publish "WebApplication1.csproj" -c Release -o /app/publish
+
+# Финальный образ
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-preview
 WORKDIR /app
 COPY --from=build /app/publish .
 
-# Запуск (имя файла должно совпадать с тем, что в логах)
+# Запуск
 ENTRYPOINT ["dotnet", "WebApplication1.dll"]
